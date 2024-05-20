@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# bpm's installer
+install() {
+	local repo=$(find $HOME -type d -name bpm)
+	cp $repo/bpm $HOME/bin || return
+	cp -r $repo/.bpm $HOME || return
+	echo "bpm installed!"
+}
+
+install

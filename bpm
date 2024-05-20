@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# bpm's main code
+
+autoupdate=`cat $HOME/.bpm/.cfg | grep 'autoup' | cut -d '=' -f2`
+repo=`find $HOME -type d -name bpm`
+
+# Check for unit test
+if [ $BPM_TST ]; then
+	# Load the lib from the repo and set prgroot to repo
+	echo -e "[BPM] UNIT TEST MODE! READING FROM REPO!"
+	source $repo/.bpm/.lib
+	prgroot="$repo/.bpm"
+elif [[ $autoupdate ]]; then
+	# Check for updates
+	[ ! -d $HOME/.bpm ] && $repo/install
+	if [[ `diff $repo/.bpm $HOME/.bpm` ]]; then echo "Updating bpm..."; $repo/install; fi
+	
+	# Load lib
+	source $HOME/.bpm/.lib
+else
+	source $HOME/.bpm/.lib
+fi
+
+
+__bpm() {
+  [ -z $1 ] && __args -? || __args $@
+	# Write your app's main flow here (General stub supports arg handling)
+}
+
+__bpm $@
+
+# Cleanup for accidental sourcing
+unset __bpm __args __cwd autoupdate repo
