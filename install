@@ -2,10 +2,13 @@
 
 # bpm's installer
 install() {
-	local repo=$(find $HOME -type d -name bpm)
-	cp $repo/bpm $HOME/bin || return
-	cp -r $repo/.bpm $HOME || return
+	local repo="$(find "$HOME" -type d -name bpm 2>/dev/null | grep repo)"
+	cp "$repo"/bpm "$HOME"/bin || return
+	cp -r "$repo"/.bpm/.lib "$HOME"/.bpm || return
+	cp -r "$repo"/.bpm/help "$HOME"/.bpm || return
+	cp -r "$repo"/.bpm/version "$HOME"/.bpm || return
+	[[ ! -e "$HOME"/.bpm/.cfg ]] && { cp -f "$repo"/.bpm/.cfg "$HOME"/.bpm/.cfg || return 1; }
 	echo "bpm installed!"
 }
 
-install
+install "$@"

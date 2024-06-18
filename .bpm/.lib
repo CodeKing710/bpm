@@ -3,16 +3,15 @@
 # bpm's Functions and Variables
 
 # Vars
-__cwd=`pwd`
+__cwd="$(pwd)"
 prgroot="$HOME/.bpm"
 
 declare -A lists # For any lists your app may need as reference
-lists[cmd]="'config' 'help' 'version'" # To be interpolated as array later
 
 # Config
 __loadcfg() {
 	local cfg="$prgroot/.cfg"
-	# Write config variables below like so: name=`cat $cfg | grep 'name' | cut -d '=' -f2`
+	# Write config variables below like so: name=$(cat "$cfg" | grep 'name' | cut -d '=' -f2)
 }
 # Config vars will be set via function in-case of needing reloaded
 __loadcfg
@@ -20,62 +19,60 @@ __loadcfg
 # Funcs
 __cfg() {
 	local cfg="$prgroot/.cfg"
-	while [[ $1 ]]; do
-		if [[ $1 =~ '=' ]]; then
-			local rule="`echo "$1" | cut -d '=' -f1`"
-			local oldvalue="`cat $cfg | grep "$rule" | cut -d '=' -f2`"
-			local newvalue="`echo "$1" | cut -d '=' -f2`"
-			sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-			echo "Updated rule $rule from $oldvalue to $newvalue!"
-		elif [[ $1 == 'list' ]]; then
-			echo "Current Settings:"
-			cat $cfg
+	while [[ -n "$1" ]]; do
+		if [[ "$1" =~ '=' ]]; then
+			local rule="$(echo "$1" | cut -d '=' -f1)"
+			local oldvalue="$(cat "$cfg" | grep "$rule" | cut -d '=' -f2)"
+			local newvalue="$(echo "$1" | cut -d '=' -f2)"
+			sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" "$cfg"
+			log "Updated rule $rule from $oldvalue to $newvalue!"
+		elif [[ "$1" == 'list' ]]; then
+			log "Current Settings:"
+			cat "$cfg"
 			return
-		elif [[ $1 == 'RESET' ]]; then
-			__args --reset
+		elif [[ "$1" == 'RESET' ]]; then
+			__args --reset-cfg
 		fi
-		echo "Rule: `cat $cfg | grep "$1" || echo "No Rule Found!"`"
+		log "Rule: $(cat "$cfg" | grep ^$1$ || echo "No Rule Found!")"
 	shift; done
 }
 __args() {
 	# Process args
+	[[ -z "$1" ]] && cat "$prgroot"/help | head -1 && exit
 	while [[ "$1" =~ '-' ]]; do
 		# End case statements with 'exit;;' to ensure program only runs that argument
 		# Otherwise use 'exit;;' when you want to bail out due to erroneous behaviour
 		case "$1" in
 			-C | --config )
 				shift
-				[ ! -z "" ] && __cfg "$@" || ( error "Must supply rule or 'list'!"; exit )
+				[[ ! -z "$1" ]] && __cfg "$@" || ( error "Must supply rule or 'list'!"; exit )
 				exit;;
 			--reset-cfg )
-				echo "Resetting bpm to default configuration..."
-				cp -rf $(find $HOME -type d -name bpm)/.bpm $HOME && echo "bpm's config has been reset!" || echo "Failed to reset defaults!"
+				log "Resetting bpm to default configuration..."
+				cp -rf $(find "$HOME" -type d -name bpm 2>/dev/null | head -1)/.bpm "$HOME/" && echo "bpm's config has been reset!" || error "Failed to reset defaults!"
 				exit;;
 			-\? | -h | --help )
-				cat $prgroot/help
+				cat "$prgroot/help"
 				exit;;
 			-v | --version )
-				cat $prgroot/version
+				cat "$prgroot/version"
 				exit;;
 			-V | --verbose )
 				VERBOSE=true
 				;;
 			* ) # Catch-all
-				cat $prgroot/help | head -1
-				echo "\"$1\" is not an argument!"
-				exit;;
+				if [[ $(type -t __cmds) == "function" && ! "$1" =~ '-' ]]; then
+					__cmds "$@"
+				else
+					cat "$prgroot/help" | head -1
+					error "\"$1\" is not an argument!"
+					exit
+				fi
+				return;;
 		esac
 	shift; done
 }
 
-error() {
-	local msg="$1"
-
-	echo -e '[0;1;31m[ERROR][0;0;0m '"$msg" >&2
-}
-
-verbose() {
-	local msg="$1"
-
-	[[ $VERBOSE ]] && echo -e '[0;1;35m[VERBOSE][0;0;0m '"$msg"
-}
+error() { echo -e '[0;1;31m[ERROR][0;0;0m '"$1" >&2; }
+verbose() { [[ -n "$VERBOSE" ]] && echo -e '[0;1;35m[VERBOSE][0;0;0m '"$1"; }
+log() { echo -e '[0;1;32m[BPM][0;0;0m '"$1"; }

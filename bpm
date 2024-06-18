@@ -1,34 +1,39 @@
 #!/bin/bash
 
+# shopt -qs extglob # Uncomment if you want to use extended glob patterns
 # bpm's main code
 
-autoupdate=`cat $HOME/.bpm/.cfg | grep 'autoup' | cut -d '=' -f2`
-repo=`find $HOME -type d -name bpm`
+autoupdate="$(cat $HOME/.bpm/.cfg | grep 'autoup' | cut -d '=' -f2)"
+repo="$(find $HOME -type d -name "bpm" 2>/dev/null | grep repo)"
+[[ ! -e "$HOME"/.bpm ]] && mkdir "$HOME/.bpm" && "$repo/install"
 
 # Check for unit test
-if [ $BPM_TST ]; then
+if [[ "$BPM_TST" == "true" ]]; then
 	# Load the lib from the repo and set prgroot to repo
 	echo -e "[BPM] UNIT TEST MODE! READING FROM REPO!"
-	source $repo/.bpm/.lib
+	source "$repo"/.bpm/.lib
 	prgroot="$repo/.bpm"
-elif [[ $autoupdate ]]; then
+elif [[ "$autoupdate" == "true" ]]; then
 	# Check for updates
-	[ ! -d $HOME/.bpm ] && $repo/install
-	if [[ `diff $repo/.bpm $HOME/.bpm` ]]; then echo "Updating bpm..."; $repo/install; fi
+	if [[ -n "$(diff "$repo"/.bpm/.lib "$HOME"/.bpm)/.lib" || \
+	-n "$(diff "$repo"/.bpm/help "$HOME"/.bpm)/help" || \
+	-n "$(diff "$repo"/.bpm/version "$HOME"/.bpm)/version" || \
+	-n "$(diff "$repo"/bpm "$HOME"/bin/bpm)" ]]; then "$repo/install"; fi
 	
 	# Load lib
-	source $HOME/.bpm/.lib
+	source "$HOME"/.bpm/.lib
 else
-	source $HOME/.bpm/.lib
+	source "$HOME"/.bpm/.lib
 fi
 
 
 __bpm() {
-  [ -z $1 ] && __args -? || __args $@
+  [[ -z "$1" ]] && __args -? || __args $@
 	# Write your app's main flow here (General stub supports arg handling)
 }
 
-__bpm $@
+__bpm "$@"
+#shopt -qu extglob # Shouldn't need this as shopt stays specific to the subshell, uncomment if sourcing to parent
 
-# Cleanup for accidental sourcing
-unset __bpm __args __cwd autoupdate repo
+# Cleanup for accidental sourcing (uncomment if desired)
+#unset __bpm __args __cwd autoupdate repo
