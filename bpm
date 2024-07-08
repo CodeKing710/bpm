@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# shopt -qs extglob # Uncomment if you want to use extended glob patterns
+shopt -qs extglob # Uncomment if you want to use extended glob patterns
 # bpm's main code
 
 autoupdate="$(cat $HOME/.bpm/.cfg | grep 'autoup' | cut -d '=' -f2)"
