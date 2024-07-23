@@ -1,6 +1,7 @@
 #!/bin/bash
 
-shopt -qs extglob # Uncomment if you want to use extended glob patterns
+shopt -qs extglob
+
 # bpm's main code
 
 autoupdate="$(cat $HOME/.bpm/.cfg | grep 'autoup' | cut -d '=' -f2)"
@@ -15,10 +16,7 @@ if [[ "$BPM_TST" == "true" ]]; then
 	prgroot="$repo/.bpm"
 elif [[ "$autoupdate" == "true" ]]; then
 	# Check for updates
-	if [[ -n "$(diff "$repo"/.bpm/.lib "$HOME"/.bpm)/.lib" || \
-	-n "$(diff "$repo"/.bpm/help "$HOME"/.bpm)/help" || \
-	-n "$(diff "$repo"/.bpm/version "$HOME"/.bpm)/version" || \
-	-n "$(diff "$repo"/bpm "$HOME"/bin/bpm)" ]]; then "$repo/install"; fi
+	if [[ -n "$(diff "$repo"/.bpm/.lib "$HOME"/.bpm/.lib)" || -n "$(diff "$repo"/.bpm/help "$HOME"/.bpm/help)" || -n "$(diff "$repo"/.bpm/version "$HOME"/.bpm/version)" || -n "$(diff "$repo"/bpm "$HOME"/bin/bpm)" ]]; then "$repo/install"; fi
 	
 	# Load lib
 	source "$HOME"/.bpm/.lib
@@ -28,12 +26,21 @@ fi
 
 
 __bpm() {
-  [[ -z "$1" ]] && __args -? || __args $@
+	if [[ -z "$1" ]]; then
+		__args
+	else
+		if [[ "$1" =~ "-" ]]; then
+			# Arg mode
+			__args "$@"
+		else
+			# Command mode
+			__cmds "$@"
+		fi
+	fi
 	# Write your app's main flow here (General stub supports arg handling)
 }
 
 __bpm "$@"
-#shopt -qu extglob # Shouldn't need this as shopt stays specific to the subshell, uncomment if sourcing to parent
 
-# Cleanup for accidental sourcing (uncomment if desired)
-#unset __bpm __args __cwd autoupdate repo
+# Cleanup for accidental sourcing
+[[ "$$" -eq "$BASHPID" ]] && unset __bpm __args __cwd autoupdate repo prgroot __loadcfg __cfg error verbose log lists __cmds states

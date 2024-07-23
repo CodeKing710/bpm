@@ -3,11 +3,19 @@
 # bpm's installer
 install() {
 	local repo="$(find "$HOME" -type d -name bpm 2>/dev/null | grep repo)"
-	cp "$repo"/bpm "$HOME"/bin || return
-	cp -r "$repo"/.bpm/.lib "$HOME"/.bpm || return
-	cp -r "$repo"/.bpm/help "$HOME"/.bpm || return
-	cp -r "$repo"/.bpm/version "$HOME"/.bpm || return
-	[[ ! -e "$HOME"/.bpm/.cfg ]] && { cp -f "$repo"/.bpm/.cfg "$HOME"/.bpm/.cfg || return 1; }
+	
+	# Preprocess
+	[[ ! -e "$HOME/.bpm" ]] && mkdir "$HOME/.bpm"
+
+	# Install
+	cp -f "$repo"/bpm "$HOME"/bin || return 1
+	cp -f "$repo"/.bpm/.lib "$HOME"/.bpm || return 1
+	cp -f "$repo"/.bpm/help "$HOME"/.bpm || return 1
+	cp -f "$repo"/.bpm/version "$HOME"/.bpm || return 1
+	# Uncomment if you desire configurables
+	#[[ ! -e "$HOME"/.bpm/.cfg ]] && { cp -f "$repo"/.bpm/.cfg "$HOME"/.bpm/.cfg || return 1; }
+
+	# Comment if you want quiet installation
 	echo "bpm installed!"
 }
 
