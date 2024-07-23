@@ -4,7 +4,7 @@ shopt -qs extglob
 
 # bpm's main code
 
-autoupdate="$(cat $HOME/.bpm/.cfg | grep 'autoup' | cut -d '=' -f2)"
+autoupdate="true"
 repo="$(find $HOME -type d -name "bpm" 2>/dev/null | grep repo)"
 [[ ! -e "$HOME"/.bpm ]] && mkdir "$HOME/.bpm" && "$repo/install"
 
