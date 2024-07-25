@@ -164,7 +164,6 @@ __proc() {
 	[[ -z "${states[dev]}" ]] && echo -e "# Input the proper bash command to run your app" > "./${states[name]}/dev/run"
 	log "Project creation complete!"
 }
-# __deploy() {}
 __clone() {
 	[[ ! -e "./clone.cfg" ]] && {
 		error "Unable to locate clone.cfg!"
@@ -173,6 +172,17 @@ __clone() {
 	} || {
 		verbose "Cloning project..."
 		source "./clone.cfg"
-		log "Clone complete!"
+		[[ -n "$DONE" ]] && log "Clone complete!" || error "Failed to clone!"
+	}
+}
+__deploy() {
+	[[ ! -e "./dp.cfg" ]] && {
+		error "Unable to locate dp.cfg!"
+		error "Please make sure you run this in the project directory!"
+		exit 1
+	} || {
+		verbose "Running deployment script..."
+		source "./dp.cfg"
+		[[ -n "$DONE" ]] && log "Deployment complete!" || error "Failed to deploy!"
 	}
 }
