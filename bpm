@@ -32,9 +32,11 @@ __bpm() {
 		if [[ "$1" =~ "-" ]]; then
 			# Arg mode
 			__args "$@"
-		else
+		elif [[ "$1" =~ ${lists[cmds]} ]]; then
 			# Command mode
 			__cmds "$@"
+		else
+			__short "$@"
 		fi
 	fi
 	__proc

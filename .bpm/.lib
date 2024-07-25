@@ -135,6 +135,10 @@ __cmds() {
 		esac
 	shift; done
 }
+__short() {
+	# Shorthand arg processing
+	states[name]="$1"
+}
 __proc() {
 	# Check for overwrite
 	[[ -e "./${states[name]}" ]] && {
