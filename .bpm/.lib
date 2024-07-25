@@ -13,7 +13,7 @@ declare -A lists # For any lists your app may need as reference
 declare -A states
 
 # Add commands to the regex string below, separated by '|'
-lists[cmds]="^(name|verbose|help|version)$"
+lists[cmds]="^(name|exclude|clone|deploy|verbose|help|version)$"
 
 error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"$1" >&2; }
 verbose() { [[ -n "$VERBOSE" ]] && echo -e '\e[0;1;35m[VERBOSE]\e[0;0;0m '"$1"; }
@@ -21,7 +21,7 @@ log() { echo -e '\e[0;1;32m[BPM]\e[0;0;0m '"$1"; }
 
 __args() {
 	# Process args
-	[[ -z "$1" ]] && cat "$prgroot"/help | head -1 && exit
+	[[ -z "$1" ]] && cat "$prgroot"/help | head -1 && exit 1
 	while [[ -n "$1" ]]; do
 		case "${1}" in
 			-n | --name )
@@ -49,10 +49,10 @@ __args() {
 				;;
 			-c | --clone )
 				__clone
-				;;
+				exit;;
 			-d | --deploy )
 				__deploy
-				;;
+				exit;;
 			-V | --verbose )
 				VERBOSE=true
 				;;
@@ -107,10 +107,10 @@ __cmds() {
 				;;
 			@(clone) )
 				__clone
-				;;
+				exit;;
 			@(deploy) )
 				__deploy
-				;;
+				exit;;
 			@(verbose) )
 				VERBOSE=true
 				;;
@@ -157,12 +157,22 @@ __proc() {
 	# Preload general project files as well as bpm management files
 	verbose "Copying general project files..."
 	echo -e "entrypoint=run" > "./${states[name]}/${states[name]}.cfg"
-	echo -e "dir=\"\$(find ~ -type d -name \"${states[name]}\")\"\ncp \"\$dir/dev\" \"\$dir/tst\"\nsource \"\$dir/tst/run\" && cp \"\$dir/tst\" \"\$dir/prd\"\nunset dir" > "./${states[name]}/dp.cfg"
-	echo -e "dir=\"\$(find ~ -type d -name \"${states[name]}\")\"\ncp \"\$dir/prd\" \"\$dir/tst\"\ncp \"\$dir/prd\" \"\$dir/dev\"\nunset dir" > "./${states[name]}/clone.cfg"
+	echo -e "dir=\"\$PWD\"\ncp -a -f \"\$dir/dev/.\" \"\$dir/tst\"\nsource \"\$dir/tst/run\" && cp -a -f \"\$dir/dev/.\" \"\$dir/prd\"\nunset dir" > "./${states[name]}/dp.cfg"
+	echo -e "dir=\"\$PWD\"\ncp -a -f \"\$dir/prd/.\" \"\$dir/tst\"\ncp -a -f \"\$dir/prd/.\" \"\$dir/dev\"\nunset dir" > "./${states[name]}/clone.cfg"
 	echo -e "# Input the proper bash command to run your app" > "./${states[name]}/prd/run"
 	[[ -z "${states[tst]}" ]] && echo -e "# Input the proper bash command to run your app" > "./${states[name]}/tst/run"
 	[[ -z "${states[dev]}" ]] && echo -e "# Input the proper bash command to run your app" > "./${states[name]}/dev/run"
 	log "Project creation complete!"
 }
 # __deploy() {}
-# __clone() {}
+__clone() {
+	[[ ! -e "./clone.cfg" ]] && {
+		error "Unable to locate clone.cfg!"
+		error "Please make sure you run this in the project directory!"
+		exit 1
+	} || {
+		verbose "Cloning project..."
+		source "./clone.cfg"
+		log "Clone complete!"
+	}
+}

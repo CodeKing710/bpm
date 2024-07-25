@@ -1,4 +1,5 @@
 Usage: bpm <-n <name>> [-e <prd|tst|dev>] [-cd]
+Shorthand: bpm <name>
 
 Options:
     -n | --name | name
@@ -8,12 +9,13 @@ Options:
         Exclude environment folders from the project
 
     -c | --clone | clone
-        Perform a copy of the production environment to the other environments.
+        Perform a copy of the production environment to the other environments and exit.
         Adjustable by editing the `clone.cfg` file
 
     -d | --deploy | deploy
-        Open a deployment pipeline to copy the development environment to test.
-        This will perform a generic test via the `run` file
+        Open a deployment pipeline, process, and exit.
+        Copies the development environment to test.
+        Performs a generic test via the `run` file
         If this succeeds then it will copy dev to production
         Adjustable by editing the `deploy.cfg` file
 
