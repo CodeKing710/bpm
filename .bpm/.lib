@@ -33,7 +33,7 @@ __args() {
 			-e | --exclude )
 				shift
 				[[ -z "$1" ]] && { error "Must supply an environment to exclude!"; return 1; }
-				until [[ "$1" =~ ${lists[cmds]} || "$1" =~ ^- ]]; do
+				until [[ -z "$1" || "$1" =~ ${lists[cmds]} || "$1" =~ ^- ]]; do
 					[[ "${1,,}" =~ ^d ]] && {
 						states[dev]="t"
 						verbose "Excluding dev environment..."
@@ -41,6 +41,8 @@ __args() {
 						[[ "${1,,}" =~ ^t ]] && {
 							states[tst]="t"
 							verbose "Excluding test environment..."
+						} || {
+							log "Environment '${1,,}' does not exist, skipping..."
 						}
 					}
 				shift; done;
@@ -89,7 +91,7 @@ __cmds() {
 			@(exclude) )
 				shift
 				[[ -z "$1" ]] && { error "Must supply an environment to exclude!"; return 1; }
-				until [[ "$1" =~ ${lists[cmds]} || "$1" =~ ^- ]]; do
+				until [[ -z "$1" || "$1" =~ ${lists[cmds]} || "$1" =~ ^- ]]; do
 					[[ "${1,,}" =~ ^d ]] && {
 						states[dev]="t"
 						verbose "Excluding dev environment..."
@@ -97,6 +99,8 @@ __cmds() {
 						[[ "${1,,}" =~ ^t ]] && {
 							states[tst]="t"
 							verbose "Excluding test environment..."
+						} || {
+							log "Environment '${1,,}' does not exist, skipping..."
 						}
 					}
 				shift; done;
