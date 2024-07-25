@@ -152,6 +152,8 @@ __proc() {
 	echo -e "dir=\"\$(find ~ -type d -name \"${states[name]}\")\"\ncp \"\$dir/dev\" \"\$dir/tst\"\nsource \"\$dir/tst/run\" && cp \"\$dir/tst\" \"\$dir/prd\"\nunset dir" > "./${states[name]}/dp.cfg"
 	echo -e "dir=\"\$(find ~ -type d -name \"${states[name]}\")\"\ncp \"\$dir/prd\" \"\$dir/tst\"\ncp \"\$dir/prd\" \"\$dir/dev\"\nunset dir" > "./${states[name]}/clone.cfg"
 	echo -e "# Input the proper bash command to run your app" > "./${states[name]}/prd/run"
+	[[ -z "${states[tst]}" ]] && echo -e "# Input the proper bash command to run your app" > "./${states[name]}/tst/run"
+	[[ -z "${states[dev]}" ]] && echo -e "# Input the proper bash command to run your app" > "./${states[name]}/dev/run"
 	log "Project creation complete!"
 }
 # __deploy() {}

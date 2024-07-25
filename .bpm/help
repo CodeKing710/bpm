@@ -1,1 +1,29 @@
-Usage: bpm [options] <args>
+Usage: bpm <-n <name>> [-e <prd|tst|dev>] [-cd]
+
+Options:
+    -n | --name | name
+        Name of the project
+
+    -e | --exclude | exclude
+        Exclude environment folders from the project
+
+    -c | --clone | clone
+        Perform a copy of the production environment to the other environments.
+        Adjustable by editing the `clone.cfg` file
+
+    -d | --deploy | deploy
+        Open a deployment pipeline to copy the development environment to test.
+        This will perform a generic test via the `run` file
+        If this succeeds then it will copy dev to production
+        Adjustable by editing the `deploy.cfg` file
+
+    -V | --verbose | verbose
+        Enable verbose output
+
+    -? | --help | help
+        Show this menu and exit
+
+    -v | --version | version
+        Show BPM's current version and exit
+
+For more information, please refer to the readme over at https://github.com/CodeKing710/bpm#readme
