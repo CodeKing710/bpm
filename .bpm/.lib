@@ -13,13 +13,44 @@ declare -A lists # For any lists your app may need as reference
 declare -A states
 
 # Add commands to the regex string below, separated by '|'
-lists[cmds]="^(config|verbose|help|version)$"
+lists[cmds]="^(name|verbose|help|version)$"
+
+error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"$1" >&2; }
+verbose() { [[ -n "$VERBOSE" ]] && echo -e '\e[0;1;35m[VERBOSE]\e[0;0;0m '"$1"; }
+log() { echo -e '\e[0;1;32m[BPM]\e[0;0;0m '"$1"; }
 
 __args() {
 	# Process args
 	[[ -z "$1" ]] && cat "$prgroot"/help | head -1 && exit
 	while [[ -n "$1" ]]; do
 		case "${1}" in
+			-n | --name )
+				shift
+				[[ -z "$1" ]] && { error "Must supply a name for the project!"; return 1; }
+				states[name]="$1"
+				verbose "Name: ${states[name]}"
+				;;
+			-e | --exclude )
+				shift
+				[[ -z "$1" ]] && { error "Must supply an environment to exclude!"; return 1; }
+				until [[ "$1" =~ ${lists[cmds]} || "$1" =~ ^- ]]; do
+					[[ "${1,,}" =~ ^d ]] && {
+						states[dev]="t"
+						verbose "Excluding dev environment..."
+					} || {
+						[[ "${1,,}" =~ ^t ]] && {
+							states[tst]="t"
+							verbose "Excluding test environment..."
+						}
+					}
+				shift; done;
+				;;
+			-c | --clone )
+				__clone
+				;;
+			-d | --deploy )
+				__deploy
+				;;
 			-V | --verbose )
 				VERBOSE=true
 				;;
@@ -49,6 +80,33 @@ __cmds() {
 	[[ -z "$1" ]] && cat "$prgroot"/help | head -1 && return 1
 	while [[ -n "$1" ]]; do
 		case "${1,,}" in
+			@(name) )
+				shift
+				[[ -z "$1" ]] && { error "Must supply a name for the project!"; return 1; }
+				states[name]="$1"
+				verbose "Name: ${states[name]}"
+				;;
+			@(exclude) )
+				shift
+				[[ -z "$1" ]] && { error "Must supply an environment to exclude!"; return 1; }
+				until [[ "$1" =~ ${lists[cmds]} || "$1" =~ ^- ]]; do
+					[[ "${1,,}" =~ ^d ]] && {
+						states[dev]="t"
+						verbose "Excluding dev environment..."
+					} || {
+						[[ "${1,,}" =~ ^t ]] && {
+							states[tst]="t"
+							verbose "Excluding test environment..."
+						}
+					}
+				shift; done;
+				;;
+			@(clone) )
+				__clone
+				;;
+			@(deploy) )
+				__deploy
+				;;
 			@(verbose) )
 				VERBOSE=true
 				;;
@@ -73,6 +131,28 @@ __cmds() {
 		esac
 	shift; done
 }
-error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"$1" >&2; }
-verbose() { [[ -n "$VERBOSE" ]] && echo -e '\e[0;1;35m[VERBOSE]\e[0;0;0m '"$1"; }
-log() { echo -e '\e[0;1;32m[BPM]\e[0;0;0m '"$1"; }
+__proc() {
+	# Check for overwrite
+	[[ -e "./${states[name]}" ]] && {
+		error "Project '${states[name]}' already exists!"
+		read -erp "Would you like to overwrite? [Y/n]" yn
+		[[ "${yn,,}" =~ 'n' ]] && { verbose "Bailing out..."; log "Aborting project creation..."; return; }
+	}
+	# Begin generating the project folder
+	verbose "Creating parent folder..."
+	mkdir "./${states[name]}" 2>/dev/null
+	verbose "Creating environment subfolders..."
+	mkdir "./${states[name]}/prd" 2>/dev/null
+	[[ -z "${states[tst]}" ]] && mkdir "./${states[name]}/tst" 2>/dev/null
+	[[ -z "${states[dev]}" ]] && mkdir "./${states[name]}/dev" 2>/dev/null
+
+	# Preload general project files as well as bpm management files
+	verbose "Copying general project files..."
+	echo -e "entrypoint=run" > "./${states[name]}/${states[name]}.cfg"
+	echo -e "dir=\"\$(find ~ -type d -name \"${states[name]}\")\"\ncp \"\$dir/dev\" \"\$dir/tst\"\nsource \"\$dir/tst/run\" && cp \"\$dir/tst\" \"\$dir/prd\"\nunset dir" > "./${states[name]}/dp.cfg"
+	echo -e "dir=\"\$(find ~ -type d -name \"${states[name]}\")\"\ncp \"\$dir/prd\" \"\$dir/tst\"\ncp \"\$dir/prd\" \"\$dir/dev\"\nunset dir" > "./${states[name]}/clone.cfg"
+	echo -e "# Input the proper bash command to run your app" > "./${states[name]}/prd/run"
+	log "Project creation complete!"
+}
+# __deploy() {}
+# __clone() {}

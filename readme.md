@@ -5,8 +5,9 @@ This manager will allow you to better organize, adjust, configure, and make proj
 Basic functionality: Separate a basic dev-tst-prod environment setup into folders
 
 - |>app
-- |>dp.cfg
-- |>app.cfg
+- |---->dp.cfg
+- |---->clone.cfg
+- |---->app.cfg
 - |----> prd
 - |----> tst
 - |----> dev

@@ -37,7 +37,7 @@ __bpm() {
 			__cmds "$@"
 		fi
 	fi
-	# Write your app's main flow here (General stub supports arg handling)
+	__proc
 }
 
 __bpm "$@"
