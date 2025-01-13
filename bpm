@@ -4,22 +4,26 @@ shopt -qs extglob
 
 # bpm's main code
 
-autoupdate="true"
-repo="$(find $HOME -type d -name "bpm" 2>/dev/null | grep repo)"
+autoupdate=1
 [[ ! -e "$HOME"/.bpm ]] && mkdir "$HOME/.bpm" && "$repo/install"
 
+if (( autoupdate )); then
+	if [[ -e "$HOME/repos/bpm" ]]; then
+		local repo="$HOME/repos/bpm"
+	else
+		local repo="$(find "$HOME" -type d -name bpm 2>/dev/null)"
+	fi
+	# Check for updates
+	if [[ -n "$(diff "$repo"/.bpm/.lib "$HOME"/.bpm/.lib)" || -n "$(diff "$repo"/.bpm/help "$HOME"/.bpm/help)" || -n "$(diff "$repo"/.bpm/version "$HOME"/.bpm/version)" || -n "$(diff "$repo"/bpm "$HOME"/bin/bpm)" ]]; then
+		"$repo/install"
+	fi
+fi
 # Check for unit test
 if [[ "$BPM_TST" == "true" ]]; then
 	# Load the lib from the repo and set prgroot to repo
 	echo -e "[BPM] UNIT TEST MODE! READING FROM REPO!"
 	source "$repo"/.bpm/.lib
 	prgroot="$repo/.bpm"
-elif [[ "$autoupdate" == "true" ]]; then
-	# Check for updates
-	if [[ -n "$(diff "$repo"/.bpm/.lib "$HOME"/.bpm/.lib)" || -n "$(diff "$repo"/.bpm/help "$HOME"/.bpm/help)" || -n "$(diff "$repo"/.bpm/version "$HOME"/.bpm/version)" || -n "$(diff "$repo"/bpm "$HOME"/bin/bpm)" ]]; then "$repo/install"; fi
-	
-	# Load lib
-	source "$HOME"/.bpm/.lib
 else
 	source "$HOME"/.bpm/.lib
 fi
